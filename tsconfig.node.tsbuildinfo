@@ -1,0 +1,1 @@
+{"root":["./vite.config.ts","./api/advise.ts","./api/tts.ts","./api/_lib/finance.ts","./api/_lib/tts.ts"],"version":"6.0.3"}

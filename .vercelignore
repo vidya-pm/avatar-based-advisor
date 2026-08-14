@@ -1,0 +1,15 @@
+# Vendored TalkingHead repo extras not used by the running app — only modules/,
+# public/avatars/brunette.glb, api/, and src/ are actually needed at runtime.
+# Leading slashes matter here: unanchored patterns also matched public/avatars and
+# silently dropped the one avatar file the app actually serves (404 in production).
+/avatars
+/examples-full-demo
+/audio
+/images
+/blender
+/fonts
+/animations
+/poses
+/tests
+/examples
+/TALKINGHEAD_UPSTREAM.md
