@@ -1,4 +1,5 @@
 import { TalkingHead } from '../../modules/talkinghead.mjs';
+import { LipsyncEn } from '../../modules/lipsync-en.mjs';
 import type { Lang } from '../../api/_lib/finance';
 
 // Ready Player Me (the service TalkingHead's own examples pointed at) shut down its public
@@ -18,18 +19,6 @@ let head: TalkingHead | null = null;
 let loaded: Promise<void> | null = null;
 let audioCtx: AudioContext | null = null;
 
-// TalkingHead loads its lipsync-en.mjs dictionary via a fire-and-forget dynamic import
-// (talkinghead.mjs's lipsyncGetProcessor) with no promise exposed to callers. Without this
-// wait, a speak() call made right after the avatar loads can race that import and silently
-// get zero visemes back — this is what "mouth not syncing" turned out to be.
-async function waitForLipsyncModule(h: TalkingHead, lang: string, timeoutMs = 5000): Promise<void> {
-  const start = Date.now();
-  while (!(h as any).lipsync?.[lang]) {
-    if (Date.now() - start > timeoutMs) return;
-    await new Promise((r) => setTimeout(r, 50));
-  }
-}
-
 export function initAvatar(container: HTMLElement): Promise<void> {
   if (loaded) return loaded;
 
@@ -38,14 +27,20 @@ export function initAvatar(container: HTMLElement): Promise<void> {
     cameraView: 'upper',
   });
 
-  loaded = head
-    .showAvatar({
-      url: AVATAR_URL,
-      body: 'F',
-      avatarMood: 'neutral',
-      lipsyncLang: 'en',
-    })
-    .then(() => waitForLipsyncModule(head!, 'en'));
+  // talkinghead.mjs normally loads lipsync-en.mjs itself via a dynamic import built from a
+  // computed path (`./lipsync-${lang}.mjs`). Rollup can't statically analyze that, so it
+  // silently drops the file from the production build entirely — the avatar loads fine but
+  // never speaks in prod, since every speakAudio() call throws trying to use a dictionary
+  // that was never loaded. Importing it ourselves (a static import Vite bundles correctly)
+  // and injecting it directly sidesteps that broken code path.
+  (head as unknown as { lipsync: Record<string, unknown> }).lipsync.en = new LipsyncEn();
+
+  loaded = head.showAvatar({
+    url: AVATAR_URL,
+    body: 'F',
+    avatarMood: 'neutral',
+    lipsyncLang: 'en',
+  });
 
   return loaded;
 }
