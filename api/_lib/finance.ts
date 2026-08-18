@@ -185,7 +185,7 @@ export async function askAdvisorStream(
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${groqKey}` },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: 'openai/gpt-oss-120b',
       messages: buildMessages(question, sources, fundMatches, lang, history),
       stream: true,
     }),
